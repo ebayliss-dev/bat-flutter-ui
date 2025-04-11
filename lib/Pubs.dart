@@ -126,7 +126,12 @@ class _PubsScreenState extends State<PubsScreen> {
     if (filteredPubs.isEmpty) {
       return const Center(child: Text('No pubs found'));
     }
+
     return ListView.separated(
+      shrinkWrap:
+          true, // Important: allows the ListView to size itself correctly
+      physics:
+          const NeverScrollableScrollPhysics(), // Prevents nested scrolling issues
       itemCount: filteredPubs.length,
       separatorBuilder: (context, index) => Divider(
         color: Colors.grey.shade300,
@@ -540,53 +545,43 @@ class _PubsScreenState extends State<PubsScreen> {
     return Scaffold(
       extendBody: true,
       drawer: const AppDrawer(activeItem: 1),
-      body: Stack(
-        children: [
-          // Background
-          Positioned(
-            width: size.width * 1.7,
-            bottom: 100,
-            left: 100,
-            child: Image.asset('assets/Backgrounds/Spline.png'),
-          ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
+      bottomNavigationBar: CustomBottomNavigationBar(),
+      body: SizedBox.expand(
+        // Ensures the body fills the full screen
+        child: Stack(
+          children: [
+            // Background image with opacity
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.5,
+                child: Image.asset(
+                  'assets/Backgrounds/Spine.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-          ),
-          const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-              child: const SizedBox(),
-            ),
-          ),
-          // Main Content
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _isLoading
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(),
-                        const Center(
-                          child: LoadingScreen(loadingText: ""),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(),
-                        // Container for pub list
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 20.0),
-                            child: SizedBox(
-                              height: size.height * 0.705,
-                              width: size.width * 0.9,
+
+            // Foreground content
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: size.height,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildGreeting(),
+                      const SizedBox(height: 16),
+                      _isLoading
+                          ? const Center(
+                              child: LoadingScreen(loadingText: ""),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.only(top: 20.0),
                               child: Container(
+                                width: double.infinity,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
@@ -606,15 +601,15 @@ class _PubsScreenState extends State<PubsScreen> {
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      const SizedBox(height: 32), // bottom padding
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(),
     );
   }
 }

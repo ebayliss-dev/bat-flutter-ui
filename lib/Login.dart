@@ -28,21 +28,23 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
         body: Stack(
       children: [
-        Positioned(
-            width: MediaQuery.of(context).size.width * 1.7,
-            bottom: 200,
-            left: 100,
-            child: Image.asset('assets/Backgrounds/Spline.png')),
+        // Optional blur layer
         Positioned.fill(
-            child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-        )),
-        const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
+            child: const SizedBox(),
+          ),
+        ),
         Positioned.fill(
-            child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-          child: const SizedBox(),
-        )),
+          child: Opacity(
+            opacity: 0.5, // 50% transparency
+            child: Image.asset(
+              'assets/Backgrounds/Spine.png',
+              fit: BoxFit.fill,
+            ),
+          ),
+        ),
+
         AnimatedPositioned(
           duration: const Duration(milliseconds: 240),
           top: isSignInDialogShown ? -50 : 0,
@@ -70,6 +72,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             "We bring to you the all new Burton Ale Trail app.")
                       ]),
                     ),
+                    Center(
+                      child: Image.asset(
+                        'assets/images/marvin.png',
+                        width: 300,
+                        height: 300,
+                      ),
+                    ),
                     const Spacer(
                       flex: 2,
                     ),
@@ -92,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24.0),
                       child: Text(
-                        "You may use this app for free, but some features are only accessible to members",
+                        "",
                         style: TextStyle(),
                       ),
                     )

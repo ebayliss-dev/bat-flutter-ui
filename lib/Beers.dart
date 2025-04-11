@@ -347,138 +347,113 @@ class _BeersScreenState extends State<BeersScreen>
 
     return Scaffold(
       extendBody: true,
-      body: Stack(
-        children: [
-          Positioned(
-            width: size.width * 1.7,
-            bottom: 100,
-            left: 100,
-            child: Image.asset('assets/Backgrounds/Spline.png'),
-          ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-            ),
-          ),
-          const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-              child: const SizedBox(),
-            ),
-          ),
-          SafeArea(
-            child: _isLoading
-                ? SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(),
-                        TabBar(
-                          controller: _tabController,
-                          indicatorColor: AppColors.primaryColor,
-                          labelColor: AppColors.primaryColor,
-                          unselectedLabelColor: Colors.grey,
-                          tabs: const [
-                            Tab(text: 'Available Beers'),
-                            Tab(text: 'Favourite Beers'),
-                          ],
-                        ),
-                        const Center(
-                          child: LoadingScreen(
-                            loadingText: "",
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(),
-                        TabBar(
-                          controller: _tabController,
-                          indicatorColor: AppColors.primaryColor,
-                          labelColor: AppColors.primaryColor,
-                          unselectedLabelColor: Colors.grey,
-                          tabs: const [
-                            Tab(text: 'Available Beers'),
-                            Tab(text: 'Favourite Beers'),
-                          ],
-                        ),
-                        // Add the search text field here.
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: TextField(
-                            controller: _searchController,
-                            decoration: InputDecoration(
-                              labelText: 'Search for beers',
-                              labelStyle: const TextStyle(color: Colors.red),
-                              prefixIcon:
-                                  const Icon(Icons.search, color: Colors.red),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Colors.red),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(color: Colors.red),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                    color: Colors.red, width: 2),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              top: 10.0, // Add padding at the top
-                            ),
-                            child: SizedBox(
-                              height: size.height * 0.65,
-                              width: size.width *
-                                  0.9, // Ensure the width is 90% of the screen
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white, // White background
-                                  borderRadius:
-                                      BorderRadius.circular(20), // Curved edges
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(
-                                          0.1), // Optional shadow for depth
-                                      spreadRadius: 2,
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
-                                  child: TabBarView(
-                                    controller: _tabController,
-                                    children: [_buildBeerList()],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
-      ),
       drawer: const AppDrawer(activeItem: 1),
       bottomNavigationBar: CustomBottomNavigationBar(),
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            // Background image with opacity
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.5,
+                child: Image.asset(
+                  'assets/Backgrounds/Spine.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+
+            // Foreground content
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildGreeting(),
+                    TabBar(
+                      controller: _tabController,
+                      indicatorColor: AppColors.primaryColor,
+                      labelColor: AppColors.primaryColor,
+                      unselectedLabelColor: Colors.grey,
+                      tabs: const [
+                        Tab(text: 'Available Beers'),
+                        Tab(text: 'Favourite Beers'),
+                      ],
+                    ),
+                    if (_isLoading)
+                      const Center(
+                        child: LoadingScreen(loadingText: ""),
+                      )
+                    else ...[
+                      // Search field
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            labelText: 'Search for beers',
+                            labelStyle: const TextStyle(color: Colors.red),
+                            prefixIcon:
+                                const Icon(Icons.search, color: Colors.red),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Colors.red),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(color: Colors.red),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  const BorderSide(color: Colors.red, width: 2),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Beers container
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: SizedBox(
+                            height: size.height * 0.65,
+                            width: size.width * 0.9,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    spreadRadius: 2,
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0),
+                                child: TabBarView(
+                                  controller: _tabController,
+                                  children: [
+                                    _buildBeerList(), // Available Beers
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
