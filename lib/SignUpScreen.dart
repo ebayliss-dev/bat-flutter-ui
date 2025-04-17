@@ -1,14 +1,13 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:burtonaletrail_app/AppApi.dart';
 import 'package:burtonaletrail_app/Home.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:http/io_client.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Add this package in pubspec.yaml
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rive/rive.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class SignInForm extends StatefulWidget {
@@ -20,6 +19,8 @@ class SignInForm extends StatefulWidget {
 
 class _SignInFormState extends State<SignInForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _secureCodeController = TextEditingController();
+
   bool isShowLoading = false;
   bool isShowConfetti = false;
   bool isSecureCodeVisible = false;
@@ -27,12 +28,10 @@ class _SignInFormState extends State<SignInForm> {
   String? firstName;
   String? lastName;
   String? mobileNumber;
-  String? secureCode;
 
   late SMITrigger check;
   late SMITrigger error;
   late SMITrigger reset;
-
   late SMITrigger confetti;
 
   StateMachineController getRiveController(Artboard artboard) {
@@ -44,7 +43,6 @@ class _SignInFormState extends State<SignInForm> {
 
   Future<void> signIn(BuildContext context) async {
     if (!isSecureCodeVisible) {
-      // Validate the form inputs (First Name, Last Name, Mobile Number)
       if (_formKey.currentState!.validate()) {
         setState(() {
           isShowLoading = true;
@@ -54,7 +52,6 @@ class _SignInFormState extends State<SignInForm> {
         HttpClient httpClient = HttpClient()
           ..badCertificateCallback =
               (X509Certificate cert, String host, int port) => true;
-
         IOClient ioClient = IOClient(httpClient);
 
         final response = await ioClient.post(
@@ -67,7 +64,6 @@ class _SignInFormState extends State<SignInForm> {
           }),
         );
 
-// Close the IOClient when done
         ioClient.close();
 
         setState(() {
@@ -75,10 +71,10 @@ class _SignInFormState extends State<SignInForm> {
         });
 
         if (response.statusCode == 200) {
-          // Number validation successful
           setState(() {
             isSecureCodeVisible = true;
             buttonText = "Sign In";
+            _secureCodeController.clear(); // Clear any old value
           });
         } else {
           error.fire();
@@ -88,17 +84,16 @@ class _SignInFormState extends State<SignInForm> {
         }
       }
     } else {
-      // Validate the secure code
       if (_formKey.currentState!.validate()) {
         setState(() {
           isShowLoading = true;
         });
 
-        _formKey.currentState!.save();
+        String secureCode = _secureCodeController.text;
+
         HttpClient httpClient = HttpClient()
           ..badCertificateCallback =
               (X509Certificate cert, String host, int port) => true;
-
         IOClient ioClient = IOClient(httpClient);
 
         final response = await ioClient.post(
@@ -120,9 +115,7 @@ class _SignInFormState extends State<SignInForm> {
           if (jsonResponse['access_token'] != null) {
             final accessToken = jsonResponse['access_token'];
             final refreshToken = jsonResponse['refresh_token'];
-            print(accessToken);
-            print(refreshToken);
-            // Store the access token in shared preferences
+
             SharedPreferences prefs = await SharedPreferences.getInstance();
             await prefs.setString('access_token', accessToken);
             await prefs.setString('refresh_token', refreshToken);
@@ -131,14 +124,13 @@ class _SignInFormState extends State<SignInForm> {
               context,
               MaterialPageRoute(builder: (context) => HomeScreen()),
             );
-            // Perform actions after storing token
-            // check.fire();
-            // Future.delayed(Duration(seconds: 2), () {
-            //   setState(() {
-            //     isShowConfetti = true;
-            //   });
-            //   confetti.fire();
-            // });
+
+            Future.delayed(const Duration(seconds: 2), () {
+              setState(() {
+                isShowConfetti = true;
+              });
+              confetti.fire();
+            });
           }
         } else {
           error.fire();
@@ -151,6 +143,12 @@ class _SignInFormState extends State<SignInForm> {
   }
 
   @override
+  void dispose() {
+    _secureCodeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
@@ -160,64 +158,40 @@ class _SignInFormState extends State<SignInForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (!isSecureCodeVisible) ...[
-                const Text(
-                  "Firstname",
-                  style: TextStyle(color: Colors.black54),
-                ),
+                const Text("Firstname",
+                    style: TextStyle(color: Colors.black54)),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 16),
                   child: TextFormField(
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Please enter your first name.";
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      firstName = value;
-                    },
+                    validator: (value) =>
+                        value!.isEmpty ? "Please enter your first name." : null,
+                    onSaved: (value) => firstName = value,
                     decoration: const InputDecoration(
                       hintText: "Please enter your first name",
                     ),
                   ),
                 ),
-                const Text(
-                  "Surname",
-                  style: TextStyle(color: Colors.black54),
-                ),
+                const Text("Surname", style: TextStyle(color: Colors.black54)),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 16),
                   child: TextFormField(
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Please enter your last name.";
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      lastName = value;
-                    },
+                    validator: (value) =>
+                        value!.isEmpty ? "Please enter your last name." : null,
+                    onSaved: (value) => lastName = value,
                     decoration: const InputDecoration(
                       hintText: "Please enter your last name",
                     ),
                   ),
                 ),
-                const Text(
-                  "Mobile",
-                  style: TextStyle(color: Colors.black54),
-                ),
+                const Text("Mobile", style: TextStyle(color: Colors.black54)),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 16),
                   child: TextFormField(
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Please enter your mobile number.";
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      mobileNumber = value;
-                    },
+                    keyboardType: TextInputType.phone,
+                    validator: (value) => value!.isEmpty
+                        ? "Please enter your mobile number."
+                        : null,
+                    onSaved: (value) => mobileNumber = value,
                     decoration: const InputDecoration(
                       hintText: "Please enter your mobile number.",
                     ),
@@ -225,22 +199,16 @@ class _SignInFormState extends State<SignInForm> {
                 ),
               ],
               if (isSecureCodeVisible) ...[
-                const Text(
-                  "Secure Code",
-                  style: TextStyle(color: Colors.black54),
-                ),
+                const Text("Secure Code",
+                    style: TextStyle(color: Colors.black54)),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 16),
                   child: TextFormField(
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return "Please enter your secure code.";
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      secureCode = value;
-                    },
+                    controller: _secureCodeController,
+                    keyboardType: TextInputType.number,
+                    validator: (value) => value!.isEmpty
+                        ? "Please enter your secure code."
+                        : null,
                     obscureText: true,
                     decoration: const InputDecoration(
                       hintText: "Please enter your secure code.",
@@ -253,7 +221,7 @@ class _SignInFormState extends State<SignInForm> {
                 child: ElevatedButton.icon(
                   onPressed: () => signIn(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF77D8E),
+                    backgroundColor: Colors.grey[850],
                     minimumSize: const Size(double.infinity, 56),
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.only(
@@ -264,11 +232,16 @@ class _SignInFormState extends State<SignInForm> {
                       ),
                     ),
                   ),
-                  icon: const Icon(
-                    CupertinoIcons.arrow_right,
-                    color: Color(0xFFFE0037),
+                  icon: const Icon(CupertinoIcons.arrow_right,
+                      color: Colors.white),
+                  label: Text(
+                    buttonText,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
                   ),
-                  label: Text(buttonText),
                 ),
               ),
             ],

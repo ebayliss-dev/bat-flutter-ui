@@ -119,43 +119,47 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     return Scaffold(
       extendBody: true,
-      body: Stack(
-        children: [
-          Positioned(
-            width: size.width * 1.7,
-            bottom: 100,
-            left: 100,
-            child: Image.asset('assets/Backgrounds/Spline.png'),
-          ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-            ),
-          ),
-          const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-              child: const SizedBox(),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildGreeting(),
-                  _profileStats(),
-                  _teamMembersSection(),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
       drawer: const AppDrawer(activeItem: 1),
       bottomNavigationBar: CustomBottomNavigationBar(),
+      body: SizedBox.expand(
+        // Ensures the Stack fills the entire screen
+        child: Stack(
+          children: [
+            // Background image with opacity
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.5,
+                child: Image.asset(
+                  'assets/Backgrounds/Spine.png',
+                  fit: BoxFit
+                      .cover, // BoxFit.fill may cause distortion, cover is usually better
+                ),
+              ),
+            ),
+
+            // Main content
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight:
+                        size.height, // Ensures scroll content fills screen
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildGreeting(),
+                      _profileStats(),
+                      _teamMembersSection(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -293,13 +297,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                   style: const TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Membership: None',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: userSupport == 'on' ? Colors.green : Colors.red,
-                  ),
-                ),
+                // Text(
+                //   'Membership: None',
+                //   style: TextStyle(
+                //     fontSize: 16,
+                //     color: userSupport == 'on' ? Colors.green : Colors.red,
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -477,6 +481,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                         // After returning, call initializeState to update user data.
                         await _initializeUserData();
                       },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[850], // Background color
+                        foregroundColor: Colors.white, // Text (and icon) color
+                      ),
                       child: const Text('Create Team'),
                     ),
                     const SizedBox(height: 8),

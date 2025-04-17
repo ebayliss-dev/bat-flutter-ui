@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
+import 'package:burtonaletrail_app/Notifications.dart';
+import 'package:burtonaletrail_app/Pubs.dart';
+import 'package:burtonaletrail_app/TrophyCabinet.dart';
 import 'package:flutter/material.dart';
 import 'package:http/io_client.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -12,6 +15,7 @@ import 'package:burtonaletrail_app/Home.dart';
 import 'package:burtonaletrail_app/AppMenuButton.dart';
 import 'package:burtonaletrail_app/UnlockedBadge.dart';
 import 'package:burtonaletrail_app/NavBar.dart';
+import 'package:http/http.dart' as http;
 
 class QRScanner extends StatefulWidget {
   const QRScanner({Key? key}) : super(key: key);
@@ -28,6 +32,7 @@ class _QRScannerState extends State<QRScanner> {
   String userName = '';
   String userImage = '';
   bool _isLoading = true;
+  String accessToken = '';
 
   @override
   void initState() {
@@ -57,13 +62,14 @@ class _QRScannerState extends State<QRScanner> {
     setState(() {
       userName = prefs.getString('userName') ?? '';
       userImage = prefs.getString('userImage') ?? '';
+      accessToken = prefs.getString('access_token') ?? '';
       _isLoading = false;
     });
   }
 
   Future<void> checkIn(String url) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? uuid = prefs.getString('uuid');
+    String? uuid = prefs.getString('userId');
 
     if (uuid == null) {
       _showSnackBar('User UUID is missing.');
@@ -76,20 +82,25 @@ class _QRScannerState extends State<QRScanner> {
             (X509Certificate cert, String host, int port) => true;
       IOClient ioClient = IOClient(httpClient);
 
-      final response = await ioClient.get(Uri.parse('$url/$uuid'));
+      final response = await http.post(
+        Uri.parse('$url'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'access_token': accessToken,
+        }),
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (mounted) {
+          await NotificationService().showNotification(
+            title: "PUB UNLOCKED",
+            body: data['badgeName'],
+          );
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => UnlockedBadgeScreen(
-                badgeName: data['badgeName'],
-                badgeDesc: data['badgeDesc'],
-                badgeGraphic: data['badgeGraphic'],
-                badgePoints: data['badgePoints'],
-              ),
+              builder: (context) => const PubsScreen(),
             ),
           );
         }

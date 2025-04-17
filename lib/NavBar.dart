@@ -5,6 +5,7 @@ import 'package:burtonaletrail_app/Home.dart';
 import 'package:burtonaletrail_app/Leaderboard.dart';
 import 'package:burtonaletrail_app/ProfilePage.dart';
 import 'package:burtonaletrail_app/Pubs.dart';
+import 'package:burtonaletrail_app/QRScanner.dart';
 import 'package:burtonaletrail_app/Settings.dart';
 import 'package:flutter/material.dart';
 
@@ -42,15 +43,20 @@ class CustomBottomNavigationBar extends StatelessWidget {
             break;
           case 2:
             Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => PubsScreen()),
+                MaterialPageRoute(builder: (context) => QRScanner()),
                 (Route<dynamic> route) => false);
             break;
           case 3:
             Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => BeersScreen()),
+                MaterialPageRoute(builder: (context) => PubsScreen()),
                 (Route<dynamic> route) => false);
             break;
           case 4:
+            Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => BeersScreen()),
+                (Route<dynamic> route) => false);
+            break;
+          case 5:
             Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => ProfileScreen()),
                 (Route<dynamic> route) => false);
@@ -64,6 +70,10 @@ class CustomBottomNavigationBar extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.leaderboard, size: 24),
           label: 'Leaderboards',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.qr_code, size: 24), // Icon for 3D Scans
+          label: 'QR',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.business_outlined, size: 24), // Icon for 3D Scans

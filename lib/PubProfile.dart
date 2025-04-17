@@ -287,6 +287,7 @@ class _PubProfileScreenState extends State<PubProfileScreen> {
                                 itemCount: beerData[0].length,
                                 itemBuilder: (context, index) {
                                   final item = beerData[0][index];
+                                  print(item);
                                   return InkWell(
                                     onTap: () {
                                       Navigator.push(
@@ -299,8 +300,9 @@ class _PubProfileScreenState extends State<PubProfileScreen> {
                                       );
                                     },
                                     child: ListTile(
-                                      contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 0.0, vertical: 0.0),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 0.0, vertical: 0.0),
                                       leading: item['beerGraphic'] != null
                                           ? Image.network(
                                               '${item['beerGraphic']}',

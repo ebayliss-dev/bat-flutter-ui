@@ -205,6 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
             prefs.setString('userTeamMembers', userTeamMembers);
             prefs.setString('userTeamPoints', userTeamPoints);
             prefs.setString('userTeamAdmin', userTeamAdmin);
+            prefs.setString('acesss_token', accessToken);
             // Save leaderboard data
             if (data['soloLeaderboardData'] != null) {
               prefs.setString('soloLeaderboardData',
@@ -278,22 +279,13 @@ class _HomeScreenState extends State<HomeScreen> {
       extendBody: true,
       body: Stack(
         children: [
-          Positioned(
-            width: MediaQuery.of(context).size.width * 1.7,
-            bottom: 100,
-            left: 100,
-            child: Image.asset('assets/Backgrounds/Spline.png'),
-          ),
           Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-            ),
-          ),
-          const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-              child: const SizedBox(),
+            child: Opacity(
+              opacity: 0.5, // 50% transparency
+              child: Image.asset(
+                'assets/Backgrounds/Spine.png',
+                fit: BoxFit.fill,
+              ),
             ),
           ),
           SafeArea(

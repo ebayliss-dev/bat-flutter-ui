@@ -1,1 +1,0 @@
- /Users/edward.bayliss/Developer/BurtonAleTrail/bat-flutter-ui/.dart_tool/flutter_build/4f676cf4cad6b29d1ddd8ade3190cae2/native_assets.yaml: 

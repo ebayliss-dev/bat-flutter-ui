@@ -5,11 +5,12 @@ import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:burtonaletrail_app/Notifications.dart'; // Assumes apiServerCreateTeam is defined here.
 
-// String apiServer = 'https://burtonaletrail.pawtul.com'; //Server
+String apiServer = 'https://burtonaletrail.pawtul.com'; //Server
+// String apiServer = 'http://192.168.1.11:5000';
 
-final String apiServer = Platform.isAndroid
-    ? 'http://10.0.2.2:5000' // Android device or emulator
-    : 'http://127.0.0.1:5000'; // iOS simulator
+// final String apiServer = Platform.isAndroid
+//     ? 'http://10.0.2.2:5000' // Android device or emulator
+//     : 'http://127.0.0.1:5000'; // iOS simulator
 
 // AUTHENTICATION
 String apiServerOTP = '$apiServer/api/auth/otp';
@@ -30,6 +31,7 @@ String apiServerJWTValidate = '$apiServer/api/validate-token';
 // BEERS
 String apiServerBeerList = '$apiServer/api/beers/all';
 String apiServerToggleFavourite = '$apiServer/api/beers/favourite';
+String apiServerBeerRate = '$apiServer/api/beers/rate';
 
 //PUBS
 String apiServerPubList = '$apiServer/api/pubs/all';
@@ -56,6 +58,8 @@ String apiServerTrophys = '$apiServer/api/trophycabinet/all';
 String apiServerUnlockStreak = '$apiServer/api/badges/streak';
 
 String apiServerMapInformation = '$apiServer/api/map/all';
+
+String apiServerCheckIn = '$apiServer/checkin/qr/scan/';
 
 void NotificationSetup() async {
   await NotificationService().initialize();

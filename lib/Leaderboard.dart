@@ -537,108 +537,91 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
 
     return Scaffold(
       extendBody: true,
-      body: Stack(
-        children: [
-          Positioned(
-            width: size.width * 1.7,
-            bottom: 100,
-            left: 100,
-            child: Image.asset('assets/Backgrounds/Spline.png'),
-          ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
+      drawer: const AppDrawer(activeItem: 1),
+      bottomNavigationBar: CustomBottomNavigationBar(),
+      body: SizedBox.expand(
+        // Ensures the Stack fills the entire screen
+        child: Stack(
+          children: [
+            // Background image with opacity
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.5,
+                child: Image.asset(
+                  'assets/Backgrounds/Spine.png',
+                  fit: BoxFit
+                      .cover, // BoxFit.fill may cause distortion, cover is usually better
+                ),
+              ),
             ),
-          ),
-          const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-              child: const SizedBox(),
-            ),
-          ),
-          SafeArea(
-            child: _isLoading
-                ? SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(),
-                        TabBar(
-                          controller: _tabController,
-                          indicatorColor: AppColors.primaryColor,
-                          labelColor: AppColors.primaryColor,
-                          unselectedLabelColor: Colors.grey,
-                          tabs: const [
-                            Tab(text: 'Solo Leaderboard'),
-                            Tab(text: 'Team Leaderboard'),
-                          ],
-                        ),
-                        const Center(
-                          child: LoadingScreen(loadingText: ""),
-                        ),
-                      ],
-                    ),
-                  )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(),
-                        TabBar(
-                          controller: _tabController,
-                          indicatorColor: AppColors.primaryColor,
-                          labelColor: AppColors.primaryColor,
-                          unselectedLabelColor: Colors.grey,
-                          tabs: const [
-                            Tab(text: 'Solo Leaderboard'),
-                            Tab(text: 'Team Leaderboard'),
-                          ],
-                        ),
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 20.0),
-                            child: SizedBox(
-                              height: size.height * 0.65,
-                              width: size.width * 0.9,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      spreadRadius: 2,
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
+
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: size.height,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildGreeting(),
+                      TabBar(
+                        controller: _tabController,
+                        indicatorColor: AppColors.primaryColor,
+                        labelColor: AppColors.primaryColor,
+                        unselectedLabelColor: Colors.grey,
+                        tabs: const [
+                          Tab(text: 'Solo Leaderboard'),
+                          Tab(text: 'Team Leaderboard'),
+                        ],
+                      ),
+                      _isLoading
+                          ? const Center(
+                              child: LoadingScreen(loadingText: ""),
+                            )
+                          : Center(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 20.0),
+                                child: SizedBox(
+                                  height: size.height * 0.65,
+                                  width: size.width * 0.9,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          spreadRadius: 2,
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16.0),
-                                  child: TabBarView(
-                                    controller: _tabController,
-                                    children: [
-                                      _soloLeaderboardWidget(),
-                                      _teamLeaderboardWidget(),
-                                    ],
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: TabBarView(
+                                        controller: _tabController,
+                                        children: [
+                                          _soloLeaderboardWidget(),
+                                          _teamLeaderboardWidget(),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
-          ),
-        ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      drawer: const AppDrawer(activeItem: 1),
-      bottomNavigationBar: CustomBottomNavigationBar(),
     );
   }
 

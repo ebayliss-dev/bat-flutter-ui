@@ -17,7 +17,8 @@ import 'package:rive/rive.dart' as rive;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PubsScreen extends StatefulWidget {
-  const PubsScreen({super.key});
+  final dynamic initialPub; // ⬅️  new
+  const PubsScreen({Key? key, this.initialPub}) : super(key: key);
 
   @override
   _PubsScreenState createState() => _PubsScreenState();
@@ -50,7 +51,14 @@ class _PubsScreenState extends State<PubsScreen> {
   void initState() {
     super.initState();
     _initializeState();
-    _fetchPubs();
+    _fetchPubs().then((_) {
+      if (widget.initialPub != null) {
+        // wait till first frame so context is ready
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showPubDetails(context, widget.initialPub);
+        });
+      }
+    });
     _searchController.addListener(() {
       setState(() {
         searchText = _searchController.text;
@@ -126,7 +134,12 @@ class _PubsScreenState extends State<PubsScreen> {
     if (filteredPubs.isEmpty) {
       return const Center(child: Text('No pubs found'));
     }
+
     return ListView.separated(
+      shrinkWrap:
+          true, // Important: allows the ListView to size itself correctly
+      physics:
+          const NeverScrollableScrollPhysics(), // Prevents nested scrolling issues
       itemCount: filteredPubs.length,
       separatorBuilder: (context, index) => Divider(
         color: Colors.grey.shade300,
@@ -135,46 +148,50 @@ class _PubsScreenState extends State<PubsScreen> {
       ),
       itemBuilder: (context, index) {
         final pub = filteredPubs[index];
+        print(pub['user_has_badge']);
+        final hasBadge = pub['user_has_badge'] == true;
 
         return GestureDetector(
           onTap: () => _showPubDetails(context, pub),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: SizedBox(
-              width: 60,
-              height: 60,
-              child: CircleAvatar(
-                radius: 30,
-                backgroundColor: pub['user_has_badge'] == true
-                    ? AppColors.primaryColor
-                    : Colors.grey.shade200,
-                child: pub['user_has_badge'] == true
-                    ? const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 30,
-                      )
-                    : CircleAvatar(
-                        radius: 30,
-                        backgroundImage: AssetImage(pub['logo'] ?? ''),
-                        backgroundColor: Colors.transparent,
-                      ),
+          child: Container(
+            color: hasBadge ? Colors.grey.shade100 : Colors.white,
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: SizedBox(
+                width: 60,
+                height: 60,
+                child: CircleAvatar(
+                  radius: 30,
+                  backgroundColor:
+                      hasBadge ? AppColors.primaryColor : Colors.grey.shade200,
+                  child: hasBadge
+                      ? const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 30,
+                        )
+                      : CircleAvatar(
+                          radius: 30,
+                          backgroundImage: AssetImage(pub['logo'] ?? ''),
+                          backgroundColor: Colors.transparent,
+                        ),
+                ),
               ),
-            ),
-            title: Text(
-              pub['name'] ?? '',
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+              title: Text(
+                pub['name'] ?? '',
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            subtitle: Text(
-              pub['description'] ?? '',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              subtitle: Text(
+                pub['description'] ?? '',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
             ),
           ),
         );
@@ -320,13 +337,21 @@ class _PubsScreenState extends State<PubsScreen> {
                     _buildBeerList(),
                     const SizedBox(height: 20),
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () {
+                        // 1️⃣ close the bottom‑sheet itself
+                        Navigator.of(context).pop();
+
+                        // 2️⃣ if this PubsScreen was opened from the map (initialPub != null)
+                        //    pop *again* to go back to MapScreen
+                        if (widget.initialPub != null) {
+                          Navigator.of(this.context)
+                              .pop(); // <-- pops the PubsScreen route
+                        }
+                      },
                       child: const Text(
                         'Close',
                         style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.primaryColor,
-                        ),
+                            fontSize: 16, color: AppColors.primaryColor),
                       ),
                     ),
                   ],
@@ -337,6 +362,57 @@ class _PubsScreenState extends State<PubsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _rateBeer(
+      BuildContext context, String beerId, double rating) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? accessToken = prefs.getString('access_token');
+    print(rating);
+    print(beerId);
+    if (accessToken != null) {
+      try {
+        final response = await http.post(
+          Uri.parse(apiServerBeerRate),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'beerId': beerId,
+            'rating': rating,
+            'access_token': accessToken,
+          }),
+        );
+
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        if (response.statusCode == 200) {
+          String message =
+              responseData['message'] ?? 'Rating submitted successfully.';
+          Navigator.of(context).pop(); // 👈 close bottom sheet
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message), backgroundColor: Colors.green),
+          );
+        } else {
+          String error = responseData['error'] ?? 'Failed to submit rating.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error), backgroundColor: Colors.red),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error submitting rating: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must be logged in to rate beers.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   /// Example "show beer details" method.
@@ -365,8 +441,9 @@ class _PubsScreenState extends State<PubsScreen> {
                     backgroundColor: Colors.grey.shade200,
                   ),
                 ),
+                SizedBox(width: 10, height: 10),
                 Text(
-                  beer['beer_name'] ?? 'Beer Name',
+                  beer['name'] ?? 'Beer Name',
                   style: const TextStyle(
                       fontSize: 20, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
@@ -379,7 +456,7 @@ class _PubsScreenState extends State<PubsScreen> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Rate this beer:',
+                  'Your rating:',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
@@ -394,6 +471,7 @@ class _PubsScreenState extends State<PubsScreen> {
                     color: Colors.amber,
                   ),
                   onRatingUpdate: (rating) async {
+                    await _rateBeer(context, beer['id'], rating);
                     setState(() {
                       beer['userRating'] = rating;
                     });
@@ -540,53 +618,43 @@ class _PubsScreenState extends State<PubsScreen> {
     return Scaffold(
       extendBody: true,
       drawer: const AppDrawer(activeItem: 1),
-      body: Stack(
-        children: [
-          // Background
-          Positioned(
-            width: size.width * 1.7,
-            bottom: 100,
-            left: 100,
-            child: Image.asset('assets/Backgrounds/Spline.png'),
-          ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
+      bottomNavigationBar: CustomBottomNavigationBar(),
+      body: SizedBox.expand(
+        // Ensures the body fills the full screen
+        child: Stack(
+          children: [
+            // Background image with opacity
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.5,
+                child: Image.asset(
+                  'assets/Backgrounds/Spine.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
-          ),
-          const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-              child: const SizedBox(),
-            ),
-          ),
-          // Main Content
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _isLoading
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(),
-                        const Center(
-                          child: LoadingScreen(loadingText: ""),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGreeting(),
-                        // Container for pub list
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 20.0),
-                            child: SizedBox(
-                              height: size.height * 0.705,
-                              width: size.width * 0.9,
+
+            // Foreground content
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: size.height,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildGreeting(),
+                      const SizedBox(height: 16),
+                      _isLoading
+                          ? const Center(
+                              child: LoadingScreen(loadingText: ""),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.only(top: 20.0),
                               child: Container(
+                                width: double.infinity,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
@@ -606,15 +674,15 @@ class _PubsScreenState extends State<PubsScreen> {
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      const SizedBox(height: 32), // bottom padding
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(),
     );
   }
 }
