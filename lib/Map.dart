@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
@@ -18,7 +19,7 @@ import 'package:http/io_client.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:gpx/gpx.dart';
 
-/// MapScreen – now with tap‑to‑open pub details in PubsScreen
+/// MapScreen – live device-location updates (≈ every 2 s)
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
 
@@ -44,15 +45,25 @@ class _MapScreenState extends State<MapScreen> {
   String userName = '';
   String userImage = '';
 
+  // Live-location stream
+  StreamSubscription<Position>? _posSub;
+
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     _bootstrap();
+    _listenToLocation();
+  }
+
+  @override
+  void dispose() {
+    _posSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _bootstrap() async {
-    await _getCurrentLocation();
+    await _fetchInitialLocation();
     _fetchMarkers();
     _loadGpx();
   }
@@ -61,7 +72,7 @@ class _MapScreenState extends State<MapScreen> {
   // Async data fetchers
   //──────────────────────────────────────────────────
 
-  Future<void> _getCurrentLocation() async {
+  Future<void> _fetchInitialLocation() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return;
@@ -77,16 +88,61 @@ class _MapScreenState extends State<MapScreen> {
           desiredAccuracy: LocationAccuracy.high);
       setState(() => _currentLocation = LatLng(pos.latitude, pos.longitude));
     } catch (_) {
-      // Silent fallback to Burton‑on‑Trent
-      setState(() => _currentLocation = const LatLng(52.828872, -1.6696312));
+      // Silent fallback to Burton-on-Trent
+      setState(() => _currentLocation =
+          const LatLng(52.80582312258923, -1.6293199255383417));
     } finally {
       _tryMoveMap();
     }
   }
 
+  /// Continuously listen for location updates (≈ every 2 s).
+  /// Uses platform-specific settings to stay compatible with Geolocator 9.x.
+  void _listenToLocation() async {
+    // Request permission if needed
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) return;
+
+    // Prepare platform-aware settings ("intervalDuration" only on AndroidSettings)
+    LocationSettings settings;
+    if (Platform.isAndroid) {
+      settings = AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+        intervalDuration: const Duration(seconds: 2),
+      );
+    } else if (Platform.isIOS || Platform.isMacOS) {
+      settings = AppleSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+        pauseLocationUpdatesAutomatically: false,
+      );
+    } else {
+      settings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 0,
+      );
+    }
+
+    _posSub = Geolocator.getPositionStream(locationSettings: settings).listen(
+      (pos) {
+        if (!mounted) return;
+        setState(() {
+          _currentLocation = LatLng(pos.latitude, pos.longitude);
+        });
+        // Uncomment next line if you want the camera to follow every update:
+        _mapController.move(_currentLocation!, _mapController.camera.zoom);
+      },
+    );
+  }
+
   Future<void> _loadGpx() async {
     try {
-      final raw = await rootBundle.loadString('assets/Test.gpx');
+      final raw = await rootBundle.loadString('assets/trail.gpx');
       final gpx = GpxReader().fromString(raw);
       final pts = <LatLng>[];
       for (final t in gpx.trks) {
@@ -175,6 +231,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
 
     return Scaffold(
       extendBody: true,
@@ -188,16 +245,15 @@ class _MapScreenState extends State<MapScreen> {
             left: 100,
             child: Image.asset('assets/Backgrounds/Spline.png'),
           ),
+          // Background blur
           Positioned.fill(
-              child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-                  child: Container())),
-          const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
-          Positioned.fill(
-              child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-                  child: const SizedBox())),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
+              child: const SizedBox(),
+            ),
+          ),
 
+          // Foreground content
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -208,7 +264,13 @@ class _MapScreenState extends State<MapScreen> {
                   const SizedBox(height: 20),
                   _isLoading
                       ? const LoadingScreen(loadingText: '')
-                      : _buildMap(),
+                      : SizedBox(
+                          height: size.height -
+                              padding.top -
+                              kBottomNavigationBarHeight -
+                              140, // Adjust based on greeting + spacing
+                          child: _buildMap(),
+                        ),
                 ],
               ),
             ),
@@ -224,20 +286,23 @@ class _MapScreenState extends State<MapScreen> {
     return Row(
       children: [
         Builder(
-            builder: (context) =>
-                AppMenuButton(onTap: () => Scaffold.of(context).openDrawer())),
-        const SizedBox(width: 10),
-        const Text('The Map',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-        const Spacer(),
-        CircleAvatar(
-          backgroundImage: userImage.isNotEmpty
-              ? (userImage.startsWith('http')
-                  ? NetworkImage(userImage)
-                  : AssetImage(userImage) as ImageProvider)
-              : null,
-          child: userImage.isEmpty ? const Icon(Icons.person) : null,
+          builder: (context) =>
+              AppMenuButton(onTap: () => Scaffold.of(context).openDrawer()),
         ),
+        const SizedBox(width: 10),
+        const Text(
+          'The Map',
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        ),
+        const Spacer(),
+        // CircleAvatar(
+        //   backgroundImage: userImage.isNotEmpty
+        //       ? (userImage.startsWith('http')
+        //           ? NetworkImage(userImage)
+        //           : AssetImage(userImage) as ImageProvider)
+        //       : null,
+        //   child: userImage.isEmpty ? const Icon(Icons.person) : null,
+        // ),
         const SizedBox(width: 20),
       ],
     );
@@ -246,6 +311,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget _buildMap() {
     final markerWidgets = <Marker>[];
 
+    // Pub markers
     for (final pub in _markers) {
       late double lat, lon;
       try {
@@ -268,27 +334,32 @@ class _MapScreenState extends State<MapScreen> {
       );
     }
 
-    if (_currentLocation != null) {
-      markerWidgets.add(
-        Marker(
-            point: _currentLocation!,
-            width: 50,
-            height: 50,
-            child: const Icon(Icons.my_location, color: Colors.red, size: 30)),
-      );
-    }
+    // Device-location marker
+    // if (_currentLocation != null) {
+    //   markerWidgets.add(
+    //     Marker(
+    //       point: _currentLocation!,
+    //       width: 50,
+    //       height: 50,
+    //       child: const Icon(Icons.my_location, color: Colors.blue, size: 30),
+    //     ),
+    //   );
+    // }
 
     final initialCentre = _deriveInitialCentre() ?? const LatLng(0, 0);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: SizedBox(
-        height: 600,
+        height: MediaQuery.of(context).size.height -
+            MediaQuery.of(context).padding.top -
+            kBottomNavigationBarHeight -
+            140, // Adjust this based on greeting + spacing,
         child: FlutterMap(
           mapController: _mapController,
           options: MapOptions(
             initialCenter: initialCentre,
-            initialZoom: 14.5,
+            initialZoom: 16.5,
             onMapReady: () {
               _mapIsReady = true;
               _tryMoveMap();
@@ -296,12 +367,19 @@ class _MapScreenState extends State<MapScreen> {
           ),
           children: [
             TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.app'),
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.app',
+            ),
             if (_gpxPoints.isNotEmpty)
-              PolylineLayer(polylines: [
-                Polyline(points: _gpxPoints, color: Colors.red, strokeWidth: 8)
-              ]),
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: _gpxPoints,
+                    color: Colors.red,
+                    strokeWidth: 8,
+                  ),
+                ],
+              ),
             MarkerLayer(markers: markerWidgets),
           ],
         ),
@@ -317,8 +395,9 @@ class _MapScreenState extends State<MapScreen> {
     if (value is double) return value;
     if (value is int) return value.toDouble();
     if (value is String) {
-      if (value.toLowerCase() == 'none')
+      if (value.toLowerCase() == 'none') {
         throw const FormatException('Invalid coordinate: none');
+      }
       return double.parse(value);
     }
     throw const FormatException('Invalid coordinate');

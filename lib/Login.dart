@@ -61,15 +61,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 260,
                       child: Column(children: [
                         Text(
-                          "The Burton Ale Trail",
+                          "Burton Ale Trail 2025",
                           style: TextStyle(
                               fontSize: 60, fontFamily: "Poppins", height: 1.2),
                         ),
                         SizedBox(
                           height: 16,
                         ),
-                        Text(
-                            "We bring to you the all new Burton Ale Trail app.")
+
                       ]),
                     ),
                     Center(

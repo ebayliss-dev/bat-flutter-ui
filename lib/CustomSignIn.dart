@@ -10,7 +10,8 @@ Future<Object?> customSigninDialog(BuildContext context,
       context: context,
       transitionDuration: const Duration(milliseconds: 400),
       transitionBuilder: (context, animation, secondaryAnimation, child) {
-        Tween<Offset> tween = Tween(begin: const Offset(0, -1), end: Offset.zero);
+        Tween<Offset> tween =
+            Tween(begin: const Offset(0, -1), end: Offset.zero);
         return SlideTransition(
             position: tween.animate(
                 CurvedAnimation(parent: animation, curve: Curves.easeInOut)),
@@ -36,13 +37,13 @@ Future<Object?> customSigninDialog(BuildContext context,
                         "Sign In",
                         style: TextStyle(fontSize: 34, fontFamily: "Poppins"),
                       ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        child: Text(
-                          "We will text you a secure code, if you already have an account you will be logged in, if not we will create you a new one.",
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
+                      // Padding(
+                      //   padding: EdgeInsets.symmetric(vertical: 16),
+                      //   child: Text(
+                      //     "We will text you a secure code, if you already have an account you will be logged in, if not we will create you a new one.",
+                      //     textAlign: TextAlign.center,
+                      //   ),
+                      // ),
                       SignInForm(),
                       // const Row(
                       //   children: [

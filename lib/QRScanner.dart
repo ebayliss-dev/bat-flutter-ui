@@ -82,7 +82,7 @@ class _QRScannerState extends State<QRScanner> {
             (X509Certificate cert, String host, int port) => true;
       IOClient ioClient = IOClient(httpClient);
 
-      final response = await http.post(
+      final response = await ioClient.post(
         Uri.parse('$url'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
@@ -174,11 +174,15 @@ class _QRScannerState extends State<QRScanner> {
               ],
             ),
           ),
-          CircleAvatar(
-            backgroundImage: (userImage.isNotEmpty)
-                ? MemoryImage(base64Decode(userImage))
-                : null,
-            child: userImage.isEmpty ? const Icon(Icons.person) : null,
+          // CircleAvatar(
+          //   backgroundImage: (userImage.isNotEmpty)
+          //       ? MemoryImage(base64Decode(userImage))
+          //       : null,
+          //   child: userImage.isEmpty ? const Icon(Icons.person) : null,
+          // ),
+          const SizedBox(
+            width: 40, // match CircleAvatar's size
+            height: 40,
           ),
         ],
       ),

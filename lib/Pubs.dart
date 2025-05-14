@@ -204,6 +204,7 @@ class _PubsScreenState extends State<PubsScreen> {
     if (beers.isEmpty) {
       return const Center(child: Text('No beers found'));
     }
+
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -215,32 +216,91 @@ class _PubsScreenState extends State<PubsScreen> {
       ),
       itemBuilder: (context, index) {
         final beer = beers[index];
+        final isNew = beer['new'] == true;
+        final isSoldOut = beer['sold_out'] == true;
+
         return GestureDetector(
           onTap: () => _showBeerDetails(context, beer),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: SizedBox(
-              width: 60,
-              height: 60,
-              child: CircleAvatar(
-                radius: 30,
-                backgroundImage: NetworkImage(beer['graphic'] ?? ''),
-                backgroundColor: Colors.grey.shade200,
-              ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isSoldOut ? Colors.grey.shade300 : Colors.white,
+              borderRadius: BorderRadius.circular(8),
             ),
-            title: Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
-              child: Text(
-                beer['name'] ?? '',
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Stack(
+                children: [
+                  SizedBox(
+                    width: 60,
+                    height: 60,
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundImage: NetworkImage(beer['graphic'] ?? ''),
+                      backgroundColor: Colors.grey.shade200,
+                    ),
+                  ),
+
+                  // NEW ribbon
+                  if (isNew)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'NEW',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // SOLD OUT ribbon
+                  if (isSoldOut)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'SOLD OUT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              title: Padding(
+                padding: const EdgeInsets.only(bottom: 4.0),
+                child: Text(
+                  beer['name'] ?? '',
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
+              // No trailing widget on the pubs page for now
             ),
-            trailing: null,
           ),
         );
       },
@@ -370,9 +430,15 @@ class _PubsScreenState extends State<PubsScreen> {
     String? accessToken = prefs.getString('access_token');
     print(rating);
     print(beerId);
+    final HttpClient httpClient = HttpClient()
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+
+    final IOClient ioClient = IOClient(httpClient);
+
     if (accessToken != null) {
       try {
-        final response = await http.post(
+        final response = await ioClient.post(
           Uri.parse(apiServerBeerRate),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
@@ -456,12 +522,16 @@ class _PubsScreenState extends State<PubsScreen> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Your rating:',
+                  'Current Rating:',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  'You can vote sliding the stars below',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 RatingBar.builder(
-                  initialRating: currentRating,
+                  initialRating: beer['votes_avg'],
                   minRating: 1,
                   direction: Axis.horizontal,
                   allowHalfRating: true,
@@ -572,14 +642,18 @@ class _PubsScreenState extends State<PubsScreen> {
               onTap: () {
                 // Navigate to profile screen if needed
               },
-              child: CircleAvatar(
-                backgroundImage:
-                    (userImage.isNotEmpty && isValidBase64(userImage))
-                        ? MemoryImage(base64Decode(userImage))
-                        : null,
-                child: (userImage.isEmpty || !isValidBase64(userImage))
-                    ? const Icon(Icons.person)
-                    : null,
+              // child: CircleAvatar(
+              //   backgroundImage:
+              //       (userImage.isNotEmpty && isValidBase64(userImage))
+              //           ? MemoryImage(base64Decode(userImage))
+              //           : null,
+              //   child: (userImage.isEmpty || !isValidBase64(userImage))
+              //       ? const Icon(Icons.person)
+              //       : null,
+              // ),
+              child: const SizedBox(
+                width: 40, // match CircleAvatar's size
+                height: 40,
               ),
             ),
             const SizedBox(width: 20),

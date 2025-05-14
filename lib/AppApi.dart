@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:burtonaletrail_app/Notifications.dart'; // Assumes apiServerCreateTeam is defined here.
 
 String apiServer = 'https://burtonaletrail.pawtul.com'; //Server
-// String apiServer = 'http://192.168.1.11:5000';
+// String apiServer = 'http://192.168.1.11:5000'; //Server
 
 // final String apiServer = Platform.isAndroid
 //     ? 'http://10.0.2.2:5000' // Android device or emulator
@@ -60,6 +60,9 @@ String apiServerUnlockStreak = '$apiServer/api/badges/streak';
 String apiServerMapInformation = '$apiServer/api/map/all';
 
 String apiServerCheckIn = '$apiServer/checkin/qr/scan/';
+
+//Notifications
+String apiServerGetNotifications = '$apiServer/api/notification/all';
 
 void NotificationSetup() async {
   await NotificationService().initialize();

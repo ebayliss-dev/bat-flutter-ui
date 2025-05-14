@@ -341,12 +341,16 @@ class _BeersScreenState extends State<BeersScreen>
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Your rating:',
+                  'Current Rating:',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  'You can vote sliding the stars below',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 RatingBar.builder(
-                  initialRating: currentRating,
+                  initialRating: beer['votes_avg'],
                   minRating: 1,
                   direction: Axis.horizontal,
                   allowHalfRating: true,
@@ -384,9 +388,15 @@ class _BeersScreenState extends State<BeersScreen>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? accessToken = prefs.getString('access_token');
 
+    final HttpClient httpClient = HttpClient()
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+
+    final IOClient ioClient = IOClient(httpClient);
+
     if (accessToken != null) {
       try {
-        final response = await http.post(
+        final response = await ioClient.post(
           Uri.parse(apiServerBeerRate),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({
@@ -614,14 +624,18 @@ class _BeersScreenState extends State<BeersScreen>
               onTap: () {
                 // Navigate to profile screen
               },
-              child: CircleAvatar(
-                backgroundImage:
-                    (userImage.isNotEmpty && isValidBase64(userImage))
-                        ? MemoryImage(base64Decode(userImage))
-                        : null,
-                child: (userImage.isEmpty || !isValidBase64(userImage))
-                    ? const Icon(Icons.person)
-                    : null,
+              // child: CircleAvatar(
+              //   backgroundImage:
+              //       (userImage.isNotEmpty && isValidBase64(userImage))
+              //           ? MemoryImage(base64Decode(userImage))
+              //           : null,
+              //   child: (userImage.isEmpty || !isValidBase64(userImage))
+              //       ? const Icon(Icons.person)
+              //       : null,
+              // ),
+              child: const SizedBox(
+                width: 40, // match CircleAvatar's size
+                height: 40,
               ),
             ),
             const SizedBox(width: 20),
@@ -647,14 +661,22 @@ class _BeersScreenState extends State<BeersScreen>
   Future<void> _toggleFavourite(String beerId, bool isfavourite) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? accessToken = prefs.getString('access_token');
+
     if (accessToken != null) {
       try {
-        final response = await http.post(
+        // Create a custom HttpClient that accepts self-signed certificates
+        final HttpClient httpClient = HttpClient()
+          ..badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
+
+        final IOClient ioClient = IOClient(httpClient);
+
+        final response = await ioClient.post(
           Uri.parse(apiServerToggleFavourite),
           body: json.encode({
             'beerId': beerId,
             'favourite': !isfavourite,
-            'access_token': accessToken
+            'access_token': accessToken,
           }),
           headers: {'Content-Type': 'application/json'},
         );

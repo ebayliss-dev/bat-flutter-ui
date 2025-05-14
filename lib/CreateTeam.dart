@@ -89,36 +89,36 @@ class _CreateTeamScreenState extends State<CreateTeamScreen>
 
         final String message = responseData['message'] ?? '1';
         print(message);
-        if (message == "0") {
-          await NotificationService().showNotification(
-            title: "BADGE AWARDED",
-            body: "You have unlocked the CAPTAIN badge",
-          );
-          Future.delayed(Duration(seconds: 10), () async {
-            await NotificationService().showNotification(
-              title: "POINTS AWARDED",
-              body: "You have been awarded with 50 points",
-            );
-          });
-        }
-        if (message == "2") {
-          await NotificationService().showNotification(
-            title: "BADGE AWARDED",
-            body: "You have unlocked the captain badge",
-          );
-          Future.delayed(Duration(seconds: 10), () async {
-            await NotificationService().showNotification(
-              title: "BADGE AWARDED",
-              body: "You have unlocked the TEAM PLAYER player badge",
-            );
-          });
-          Future.delayed(Duration(seconds: 10), () async {
-            await NotificationService().showNotification(
-              title: "POINTS AWARDED",
-              body: "You have been awarded with 100 points",
-            );
-          });
-        }
+        // if (message == "0") {
+        //   await NotificationService().showNotification(
+        //     title: "BADGE AWARDED",
+        //     body: "You have unlocked the Rock n Roll Doctor",
+        //   );
+        //   Future.delayed(Duration(seconds: 10), () async {
+        //     await NotificationService().showNotification(
+        //       title: "POINTS AWARDED",
+        //       body: "You have been awarded with 250 points",
+        //     );
+        //   });
+        // }
+        // if (message == "2") {
+        //   await NotificationService().showNotification(
+        //     title: "BADGE AWARDED",
+        //     body: "You have unlocked the Rock n Roll Doctor",
+        //   );
+        //   Future.delayed(Duration(seconds: 10), () async {
+        //     await NotificationService().showNotification(
+        //       title: "BADGE AWARDED",
+        //       body: "You have unlocked the TEAM PLAYER player badge",
+        //     );
+        //   });
+        //   Future.delayed(Duration(seconds: 10), () async {
+        //     await NotificationService().showNotification(
+        //       title: "POINTS AWARDED",
+        //       body: "You have been awarded with 500 points",
+        //     );
+        //   });
+        // }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Team created successfully')),

@@ -379,25 +379,24 @@ class _TrophyCabinetScreenState extends State<TrophyCabinetScreen>
       extendBody: true,
       body: Stack(
         children: [
-          // Background Decoration
-          Positioned(
-            width: size.width * 1.7,
-            bottom: 100,
-            left: 100,
-            child: Image.asset('assets/Backgrounds/Spline.png'),
-          ),
+          // Updated background image position and size
           Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
+            child: Opacity(
+              opacity: 0.5,
+              child: Image.asset(
+                'assets/Backgrounds/Spine.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          const rive.RiveAnimation.asset('assets/RiveAssets/shapes.riv'),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-              child: const SizedBox(),
-            ),
-          ),
+          // Blur layer over background
+          // Positioned.fill(
+          //   child: BackdropFilter(
+          //     filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
+          //     child: const SizedBox(),
+          //   ),
+          // ),
+          // Foreground content
           SafeArea(
             child: _isLoading
                 ? SingleChildScrollView(
@@ -440,17 +439,12 @@ class _TrophyCabinetScreenState extends State<TrophyCabinetScreen>
                         ),
                         Center(
                           child: Padding(
-                            padding: const EdgeInsets.only(
-                              top: 20.0, // Add padding at the top
-                            ),
+                            padding: const EdgeInsets.only(top: 20.0),
                             child: SizedBox(
-                              // You can fix a height if you want a specific viewport,
-                              // or let the SingleChildScrollView handle it
-                              // height: size.height * 0.65,
                               width: size.width * 0.9,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white, // White background
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
@@ -465,14 +459,11 @@ class _TrophyCabinetScreenState extends State<TrophyCabinetScreen>
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 16.0),
                                   child: SizedBox(
-                                    // This SizedBox can control your TabBarView height if desired
                                     height: size.height * 0.65,
                                     child: TabBarView(
                                       controller: _tabController,
                                       children: [
-                                        // Unlocked Badges (grouped by event)
                                         _buildGroupedBadges(unlockedBadges),
-                                        // Locked/Available Badges (grouped by event)
                                         _buildGroupedBadges(lockedBadges,
                                             isDisabled: true),
                                       ],
@@ -521,7 +512,7 @@ class _TrophyCabinetScreenState extends State<TrophyCabinetScreen>
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'What awards are left to unlock?',
+                  'Your trophies and awards',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
               ],
@@ -531,14 +522,18 @@ class _TrophyCabinetScreenState extends State<TrophyCabinetScreen>
               onTap: () {
                 // Navigate to profile screen
               },
-              child: CircleAvatar(
-                backgroundImage:
-                    (userImage.isNotEmpty && isValidBase64(userImage))
-                        ? MemoryImage(base64Decode(userImage))
-                        : null,
-                child: (userImage.isEmpty || !isValidBase64(userImage))
-                    ? const Icon(Icons.person)
-                    : null,
+              // child: CircleAvatar(
+              //   backgroundImage:
+              //       (userImage.isNotEmpty && isValidBase64(userImage))
+              //           ? MemoryImage(base64Decode(userImage))
+              //           : null,
+              //   child: (userImage.isEmpty || !isValidBase64(userImage))
+              //       ? const Icon(Icons.person)
+              //       : null,
+              // ),
+              child: const SizedBox(
+                width: 40, // match CircleAvatar's size
+                height: 40,
               ),
             ),
             const SizedBox(width: 20),

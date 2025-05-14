@@ -94,7 +94,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
 
     // A little visual tab switch effect
     _tabController.animateTo(1);
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 200));
     _tabController.animateTo(0);
 
     setState(() => _isLoading = false);
@@ -662,14 +662,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               onTap: () {
                 // Navigate to profile screen
               },
-              child: CircleAvatar(
-                backgroundImage:
-                    (userImage.isNotEmpty && isValidBase64(userImage))
-                        ? MemoryImage(base64Decode(userImage))
-                        : null,
-                child: (userImage.isEmpty || !isValidBase64(userImage))
-                    ? const Icon(Icons.person)
-                    : null,
+              // child: CircleAvatar(
+              //   backgroundImage:
+              //       (userImage.isNotEmpty && isValidBase64(userImage))
+              //           ? MemoryImage(base64Decode(userImage))
+              //           : null,
+              //   child: (userImage.isEmpty || !isValidBase64(userImage))
+              //       ? const Icon(Icons.person)
+              //       : null,
+              // ),
+              child: const SizedBox(
+                width: 40, // match CircleAvatar's size
+                height: 40,
               ),
             ),
             const SizedBox(width: 20),

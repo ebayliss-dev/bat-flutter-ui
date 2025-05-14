@@ -226,6 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       throw Exception('Access token not found');
     }
+    getNotifications();
   }
 
   @override
@@ -233,6 +234,57 @@ class _HomeScreenState extends State<HomeScreen> {
     _autoSlideTimer.cancel();
     _pageController.dispose();
     super.dispose();
+  }
+
+  void NotificationSetup() async {
+    await NotificationService().initialize();
+  }
+
+  Future<void> getNotifications() async {
+    NotificationSetup(); // assuming this initialises local_notifications
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null) return;
+
+    // Self-signed HTTPS helper (remove in production)
+    final ioClient = IOClient(
+      HttpClient()
+        ..badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true,
+    );
+
+    try {
+      final response = await ioClient.post(
+        Uri.parse(apiServerGetNotifications),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'access_token': accessToken}),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+        final List<dynamic> items =
+            decoded['notifications'] ?? []; // matches Flask payload
+
+        // Show each notification locally
+        for (final n in items) {
+          await NotificationService().showNotification(
+            title: n['title'] ?? '',
+            body: n['body'] ?? '',
+            payload: n['payload'] ?? '',
+          );
+
+          // wait 5 seconds before showing the next one
+          await Future.delayed(const Duration(seconds: 5));
+        }
+      } else {
+        debugPrint(
+            'Failed to load notifications • statusCode=${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching notifications: $e');
+    } finally {
+      ioClient.close(); // tidy up the socket
+    }
   }
 
   Future<List<Map<String, dynamic>>> _getsoloLeaderboardData() async {
