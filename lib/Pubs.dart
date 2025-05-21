@@ -388,10 +388,126 @@ class _PubsScreenState extends State<PubsScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      pub['description'] ?? 'No description available.',
-                      style: const TextStyle(fontSize: 16, color: Colors.grey),
-                      textAlign: TextAlign.center,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8.0, bottom: 4.0),
+                          child: Text(
+                            'Description',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 18),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            pub['description'] ?? 'No description available.',
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.grey),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Theme(
+                          data: ThemeData()
+                              .copyWith(dividerColor: Colors.transparent),
+                          child: ExpansionTile(
+                            tilePadding:
+                                const EdgeInsets.symmetric(horizontal: 0.0),
+                            childrenPadding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            title: const Text(
+                              'Landlord',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            children: [
+                              Text(
+                                pub['landlord'] ?? 'No description available.',
+                                style: const TextStyle(
+                                    fontSize: 16, color: Colors.grey),
+                                textAlign: TextAlign.left,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Theme(
+                          data: ThemeData()
+                              .copyWith(dividerColor: Colors.transparent),
+                          child: ExpansionTile(
+                            tilePadding:
+                                const EdgeInsets.symmetric(horizontal: 0.0),
+                            childrenPadding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            title: const Text(
+                              'Phone',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            children: [
+                              Text(
+                                pub['phone'] ?? 'No description available.',
+                                style: const TextStyle(
+                                    fontSize: 16, color: Colors.grey),
+                                textAlign: TextAlign.left,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Theme(
+                          data: ThemeData()
+                              .copyWith(dividerColor: Colors.transparent),
+                          child: ExpansionTile(
+                            tilePadding:
+                                const EdgeInsets.symmetric(horizontal: 0.0),
+                            childrenPadding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            title: const Text(
+                              'Opening Times',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
+                            ),
+                            children: [
+                              Text(
+                                () {
+                                  final openingTimes = pub['opening_times']
+                                      as Map<String, dynamic>?;
+                                  if (openingTimes == null)
+                                    return 'No description available.';
+
+                                  const weekDays = [
+                                    'monday',
+                                    'tuesday',
+                                    'wednesday',
+                                    'thursday',
+                                    'friday',
+                                    'saturday',
+                                    'sunday',
+                                  ];
+
+                                  return weekDays.map((day) {
+                                    final times = openingTimes[day];
+                                    final dayLabel =
+                                        day[0].toUpperCase() + day.substring(1);
+
+                                    if (times == null ||
+                                        times['open'] == 'CLOSED' ||
+                                        times['close'] == 'CLOSED') {
+                                      return '$dayLabel: Closed';
+                                    }
+
+                                    return '$dayLabel: ${times['open']} – ${times['close']}';
+                                  }).join('\n');
+                                }(),
+                                style: const TextStyle(
+                                    fontSize: 16, color: Colors.grey),
+                                textAlign: TextAlign.left,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
                     _buildBeerList(),

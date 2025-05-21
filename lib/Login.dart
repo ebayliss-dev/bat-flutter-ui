@@ -26,50 +26,51 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Stack(
-      children: [
-        // Optional blur layer
-        Positioned.fill(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
-            child: const SizedBox(),
-          ),
-        ),
-        Positioned.fill(
-          child: Opacity(
-            opacity: 0.5, // 50% transparency
-            child: Image.asset(
-              'assets/Backgrounds/Spine.png',
-              fit: BoxFit.fill,
+      body: Stack(
+        children: [
+          // Optional blur layer
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 10),
+              child: const SizedBox(),
             ),
           ),
-        ),
-
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 240),
-          top: isSignInDialogShown ? -50 : 0,
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.5,
+              child: Image.asset(
+                'assets/Backgrounds/Spine.png',
+                fit: BoxFit.fill,
+              ),
+            ),
+          ),
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 240),
+            top: isSignInDialogShown ? -50 : 0,
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Spacer(),
+                    const SizedBox(height: 24), // Optional spacing
                     const SizedBox(
                       width: 260,
-                      child: Column(children: [
-                        Text(
-                          "Burton Ale Trail 2025",
-                          style: TextStyle(
-                              fontSize: 60, fontFamily: "Poppins", height: 1.2),
-                        ),
-                        SizedBox(
-                          height: 16,
-                        ),
-
-                      ]),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Burton Ale Trail 2025",
+                            style: TextStyle(
+                              fontSize: 60,
+                              fontFamily: "Poppins",
+                              height: 1.2,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                        ],
+                      ),
                     ),
                     Center(
                       child: Image.asset(
@@ -78,9 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 300,
                       ),
                     ),
-                    const Spacer(
-                      flex: 2,
-                    ),
+                    const SizedBox(height: 32),
                     AnimatedBtn(
                       btnAnimationController: _btnAnimationController,
                       press: () {
@@ -99,16 +98,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text(
-                        "",
-                        style: TextStyle(),
-                      ),
-                    )
-                  ]),
+                      child: Text(""),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        )
-      ],
-    ));
+        ],
+      ),
+    );
   }
 }
